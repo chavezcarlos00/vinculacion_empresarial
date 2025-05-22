@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="es">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+        <meta name="description" content="Sistema de gestión de profesores" />
+        <meta name="author" content="Ingeniería Mecánica" />
+        <title>Tabla Administrador - Profesores</title>
+        <!-- Favicon-->
+        <link rel="icon" type="image/x-icon" href="/image/favicon.ico" />
+        <!-- Google Font-->
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@100;200;300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet" />
+        <!-- Bootstrap icons-->
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css" rel="stylesheet" />
+        <!-- DataTables CSS -->
+        <link href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css" rel="stylesheet" />
+        <!-- SweetAlert2 -->
+        <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css" rel="stylesheet" />
+        <!-- Core theme CSS (includes Bootstrap)-->       
+        <link href="/css/styles.css" rel="stylesheet" />
+        <style>
+            .text-gradient {
+                background: linear-gradient(45deg, #0061f2, #6900c7);
+                background-clip: text;
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+            }
+            .table-container {
+                overflow-x: auto;
+            }
+            .profesor-row:hover {
+                background-color: #f8f9fa;
+                cursor: pointer;
+            }
+            .categoria-badge {
+                font-size: 0.85em;
+                margin-right: 5px;
+                margin-bottom: 5px;
+                display: inline-block;
+            }
+            .btn-eliminar {
+                color: #fff;
+                background-color: #dc3545;
+                border-color: #dc3545;
+            }
+            .btn-eliminar:hover {
+                color: #fff;
+                background-color: #c82333;
+                border-color: #bd2130;
+            }
+            .acciones-column {
+                width: 100px;
+                text-align: center;
+            }
+        </style>
+    </head>
+    <body class="d-flex flex-column h-100">
+        <main class="flex-shrink-0">
+            <!-- Navar-->
+            <nav class="navbar navbar-expand-lg navbar-light bg-white py-3">
+                <div class="container px-5">
+                    <a class="navbar-brand" href="/"><span class="fw-bolder text-primary">Ingeniería Mecánica - Secretaría Técnica</span></a>
+                    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+                    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                        <ul class="navbar-nav ms-auto mb-2 mb-lg-0 small fw-bolder">
+                            <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
+                            <li class="nav-item"><a class="nav-link" href="/administradorhome">Tabla</a></li>
+                            <li class="nav-item"><a class="nav-link" href="/administradorLogin/logout">Cerrar Sesión</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </nav>
+            
+            <!-- Page content-->
+            <section class="py-5">
+                <div class="container px-5">
+                    <!-- Mensaje de éxito -->
+                    <% if (typeof success !== 'undefined' && success) { %>
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            <%= message %>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    <% } %>
+                    
+                    <div class="text-center mb-5">
+                        <h1 class="display-5 fw-bolder mb-0"><span class="text-gradient d-inline">Gestión de Profesores</span></h1>
+                    </div>
+                    
+                    <div class="row gx-5">
+                        <div class="col-12">
+                            <!-- Dashboard card -->
+                            <div class="card overflow-hidden shadow rounded-4 border-0 mb-5">
+                                <div class="card-body p-0">
+                                    <div class="d-flex align-items-center">
+                                        <div class="p-5 w-100">
+                                            <h2 class="fw-bolder">Bienvenido, <%= administrador.usuario %></h2>
+                                            <p>Correo: <%= administrador.correo %></p>
+                                            <p>Panel de administración para gestionar la información de profesores.</p>
+                                            <a href="/administradorhome/importarProfesores" class="btn btn-success">
+                                                <i class="fas fa-file-import"></i> Importar Profesores (Excel)
+                                            </a>
+                                            <a href="/administradorhome/descargar-excel<%= typeof busqueda !== 'undefined' && busqueda ? '?termino=' + encodeURIComponent(busqueda) : '' %>" class="btn btn-success" id="exportExcelBtn">
+                                                <i class="bi bi-file-earmark-excel"></i> Exportar a Excel
+                                            </a>
+                                            <button class="btn btn-danger ms-2" id="eliminarTodosProfesoresBtn">
+                                                <i class="bi bi-trash3"></i> Eliminar Profesores
+                                            </button>
+                                            <a href="/graficas" class="btn btn-primary ms-2" id="addProfesorBtn">
+                                                <i class="bi bi-plus-circle"></i> Gráficas
+                                            </a>
+                                            <a href="/administradorhome/anadirProfesor" class="btn btn-primary ms-2" id="addProfesorBtn">
+                                                <i class="bi bi-plus-circle"></i> Añadir Profesor
+                                            </a>
+                                            <a href="/asignaturaHome" class="btn btn-primary ms-2" id="addProfesorBtn">
+                                                <i class="bi bi-plus-circle"></i> Asignatura
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- busqueda -->
+                            <div class="card shadow rounded-4 border-0 mb-5">
+                                <div class="card-body p-4">
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <form action="/administradorhome/buscar" method="GET" class="d-flex" id="searchForm">
+                                                <input type="text" name="termino" class="form-control me-2" placeholder="Buscar por nombre, apellido o número de trabajador" value="<%= typeof busqueda !== 'undefined' ? busqueda : '' %>">
+                                                <button type="submit" class="btn btn-primary">
+                                                    <i class="bi bi-search"></i> Buscar
+                                                </button>
+                                            </form>
+                                        </div>
+                                        <div class="col-md-6 text-md-end mt-3 mt-md-0">
+                                            
+                                        </div>
+                                    </div>
+                                    <!-- Profesores -->
+                                    <div class="table-container">
+                                        <table id="profesores-table" class="table table-striped table-bordered">
+                                            <thead class="table-primary">
+                                                <tr>
+                                                  <th>No. Trabajador</th>
+                                                  <th>Nombre</th>
+                                                  <th>Género</th>
+                                                  <th>RFC</th>              
+                                                  <th>CURP</th>           
+                                                  <th>Dirección</th>        
+                                                  <th>Grado</th>
+                                                  <th>Correo</th>
+                                                  <th>Teléfonos</th>
+                                                  <th>Antigüedad</th>
+                                                  <th>Estado</th>
+                                                  <th>Categorías</th>
+                                                  <th class="acciones-column">Acciones</th>
+                                                </tr>
+                                              </thead>
+                                              <tbody>
+                                                <% if (profesores && profesores.length) { %>
+                                                  <% profesores.forEach(profesor => { %>
+                                                    <tr data-profesor-id="<%= profesor.profesor_id %>">
+                                                      <td><%= profesor.numero_trabajador %></td>
+                                                      <td>
+                                                        <%= profesor.nombre %>
+                                                        <%= profesor.apellido_paterno %>
+                                                        <%= profesor.apellido_materno %>
+                                                      </td>
+                                                      <td><%= profesor.genero %></td>
+                                                      <td><%= profesor.rfc %></td>              
+                                                      <td><%= profesor.curp %></td>            
+                                                      <td>
+                                                        <%= profesor.direccion.substring(0, 20) %>...
+                                                        <button class="btn btn-sm btn-link ver-direccion" 
+                                                                data-direccion="<%= profesor.direccion %>">
+                                                            <i class="bi bi-eye"></i>
+                                                        </button>
+                                                    </td>       
+                                                      <td><%= profesor.grado_academico %></td>
+                                                  <td><%= profesor.correo_institucional %></td>
+                                                  <td>
+                                                    <% if (profesor.telefono_casa) { %>
+                                                      <strong>Casa:</strong> <%= profesor.telefono_casa %><br>
+                                                    <% } %>
+                                                    <% if (profesor.telefono_celular) { %>
+                                                      <strong>Celular:</strong> <%= profesor.telefono_celular %>
+                                                    <% } %>
+                                                  </td>
+                                                  <td>
+                                                    <strong>UNAM:</strong> <%= profesor.antiguedad_unam %> años<br>
+                                                    <strong>Carrera:</strong> <%= profesor.antiguedad_carrera %> años
+                                                  </td>
+                                                  <td>
+                                                    <span class="badge 
+                                                      <%= profesor.estado === 'Activo'      ? 'bg-success'
+                                                         : profesor.estado === 'Retirado'   ? 'bg-secondary'
+                                                         : profesor.estado === 'Incapacitado' ? 'bg-warning'
+                                                         : 'bg-info' %>">
+                                                      <%= profesor.estado %>
+                                                    </span>
+                                                  </td>
+                                                  <td>
+                                                    <% if (profesor.categorias && profesor.categorias.length) { %>
+                                                      <% profesor.categorias.forEach(cat => { %>
+                                                        <span class="badge bg-primary categoria-badge">
+                                                          <%= cat.puesto %> – <%= cat.asignatura %>
+                                                          <% if (cat.fecha_inicio) { %>
+                                                            (<%= cat.fecha_inicio %>
+                                                            <%= cat.fecha_fin ? ' a ' + cat.fecha_fin : '' %>)
+                                                          <% } %>
+                                                        </span>
+                                                      <% }); %>
+                                                    <% } else { %>
+                                                      <em>Sin categorías asignadas</em>
+                                                    <% } %>
+                                                  </td>
+                                                  <td class="acciones-column">
+                                                    <!-- Botón Editar -->
+                                                    <a href="/administradorhome/editarProfesor/<%= profesor.profesor_id %>"
+                                                       class="btn btn-warning btn-sm">
+                                                      <i class="bi bi-pencil-fill"></i> Editar
+                                                    </a>
+                                                    <!-- Botón Eliminar -->
+                                                    <button type="button" class="btn btn-sm btn-eliminar"
+                                                            onclick="confirmarEliminarProfesor(
+                                                              '<%= profesor.profesor_id %>',
+                                                              '<%= profesor.nombre %> <%= profesor.apellido_paterno %> <%= profesor.apellido_materno %>'
+                                                            )">
+                                                      <i class="bi bi-trash"></i> Eliminar
+                                                    </button>
+                                                  </td>
+                                                </tr>
+                                              <% }); %>
+                                            <% } else { %>
+                                              <tr>
+                                                <td colspan="10" class="text-center">
+                                                  No se encontraron profesores
+                                                </td>
+                                              </tr>
+                                            <% } %>
+                                          </tbody>
+                                        </table>
+                                      </div>
+                                </div>
+                            </div>
+                                <!-- Tabla de Visitantes -->
+                                <div class="card shadow rounded-4 border-0 mb-5 mt-5">
+                                    <div class="card-body p-4">
+                                    <div class="row mb-3">
+                                        <div class="col-12">
+                                        <h3 class="fw-bolder text-gradient">Gestión de Visitantes</h3>
+                                        </div>
+                                        <div class="col-md-12 text-md-end mt-3">
+                                        <a href="/administradorhome/anadirVisitante" class="btn btn-primary" id="addVisitanteBtn">
+                                            <i class="bi bi-plus-circle"></i> Añadir Visitante
+                                        </a>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Visitantes -->
+                                    <div class="table-container">
+                                        <table id="visitantes-table" class="table table-striped table-bordered">
+                                        <thead class="table-info">
+                                            <tr>
+                                            <th>Usuario</th>
+                                            <th>Correo</th>
+                                            <th>Rol</th>
+                                            <th>Fecha Creación</th>
+                                            <th>Estado</th>
+                                            <th class="acciones-column">Acciones</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <% if (visitantes && visitantes.length) { %>
+                                            <% visitantes.forEach(visitante => { %>
+                                                <tr data-visitante-id="<%= visitante.usuario_id %>">
+                                                <td><%= visitante.usuario %></td>
+                                                <td><%= visitante.correo %></td>
+                                                <td><%= visitante.rol %></td>
+                                                <td><%= visitante.fecha_creacion %></td>
+                                                <td>
+                                                    <span class="badge <%= visitante.activo ? 'bg-success' : 'bg-danger' %>">
+                                                    <%= visitante.activo ? 'Activo' : 'Inactivo' %>
+                                                    </span>
+                                                </td>
+                                                <td class="acciones-column">
+                                                    <!-- Botón Eliminar -->
+                                                    <button type="button" class="btn btn-sm btn-eliminar"
+                                                            onclick="confirmarEliminarVisitante(
+                                                            '<%= visitante.usuario_id %>',
+                                                            '<%= visitante.usuario %>'
+                                                            )">
+                                                    <i class="bi bi-trash"></i> Eliminar
+                                                    </button>
+                                                </td>
+                                                </tr>
+                                            <% }); %>
+                                            <% } else { %>
+                                            <tr>
+                                                <td colspan="6" class="text-center">
+                                                No se encontraron visitantes
+                                                </td>
+                                            </tr>
+                                            <% } %>
+                                        </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        
+        <!-- Footer-->
+        <footer class="bg-white py-4 mt-auto">
+            <div class="container px-5">
+                <div class="row align-items-center justify-content-between flex-column flex-sm-row">
+                    <div class="col-auto"><div class="small m-0">Copyright &copy; Ingeniería Mecánica 2025</div></div>
+                    <div class="col-auto">
+                        <a class="small" href="https://www.aragon.unam.mx/fes-aragon/public_html/documents/aviso-de-privacidad/integral-de-la-fes-aragon.pdf">Privacidad</a>
+                        <span class="mx-1">&middot;</span>
+                        <a class="small" href="https://www.aragon.unam.mx/fes-aragon/#!/inicio">FESAragon</a>
+                        <span class="mx-1">&middot;</span>
+                        <a class="small" href="/contacto">Contacto</a>
+                    </div>
+                </div>
+            </div>
+        </footer>
+        
+        <!-- Bootstrap core JS-->
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+        <!-- jQuery -->
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <!-- SweetAlert2 -->
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        <!-- DataTables JS -->
+        <script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+        <script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
+        <script>
+            $(document).ready(function() {
+                $('#profesores-table').DataTable({
+                    language: {
+                        url: '//cdn.datatables.net/plug-ins/1.11.5/i18n/es-ES.json'
+                    },
+                    pageLength: 10,
+                    responsive: true,
+                    dom: 'Bfrtip',
+                    buttons: [],
+                    columnDefs: [
+                        { targets: -1, orderable: false } // La última columna no es ordenable
+                    ]
+                });
+            });
+        </script>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                // Actualizar el link de exportación cuando se cambia el término de búsqueda
+                const searchInput = document.querySelector('input[name="termino"]');
+                const exportBtn = document.getElementById('exportExcelBtn');
+                
+                if (searchInput && exportBtn) {
+                    searchInput.addEventListener('input', function() {
+                        const searchValue = this.value.trim();
+                        if (searchValue) {
+                            exportBtn.href = `/administradorhome/descargar-excel?termino=${encodeURIComponent(searchValue)}`;
+                        } else {
+                            exportBtn.href = '/administradorhome/descargar-excel';
+                        }
+                    });
+                }
+            });
+            
+            // Función para confirmar eliminación de profesor
+            function confirmarEliminarProfesor(profesorId, nombreProfesor) {
+                // Evitar que el evento se propague a la fila (para evitar confusiones con el evento de clic en la fila)
+                event.stopPropagation();
+                
+                Swal.fire({
+                    title: '¿Está seguro?',
+                    html: `¿Realmente desea eliminar al profesor <strong>${nombreProfesor}</strong>?<br>Esta acción no se puede deshacer.`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#dc3545',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Sí, eliminar',
+                    cancelButtonText: 'Cancelar'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        eliminarProfesor(profesorId);
+                    }
+                });
+            }
+            
+            // Función para enviar la solicitud de eliminación
+            function eliminarProfesor(profesorId) {
+                fetch(`/administradorhome/eliminar/${profesorId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'}
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire({
+                            title: '¡Eliminado!',
+                            text: data.message,
+                            icon: 'success',
+                            confirmButtonColor: '#0d6efd'
+                        }).then(() => {
+                            // Recargar la página para reflejar los cambios
+                            window.location.reload();
+                        });
+                    } else {
+                        Swal.fire({
+                            title: 'Error',
+                            text: data.message || 'No se pudo eliminar al profesor',
+                            icon: 'error',
+                            confirmButtonColor: '#0d6efd'
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error al eliminar profesor:', error);
+                    Swal.fire({
+                        title: 'Error',
+                        text: 'Ocurrió un error al procesar la solicitud',
+                        icon: 'error',
+                        confirmButtonColor: '#0d6efd'
+                    });
+                });
+            }
+            
+            // Manejar clics en filas de la tabla para la navegación 
+            // (previene conflicto con el botón eliminar)
+            $(document).ready(function() {
+                // Agregar manejador de eventos para la fila, excluyendo el botón de eliminar
+                $('.profesor-row').on('click', function(e) {
+                    // Si el clic fue en el botón eliminar o dentro del botón, no hacer nada
+                    if ($(e.target).closest('.btn-eliminar').length) {
+                        return;
+                    }
+
+                });
+            });
+        </script>
+
+        <script>
+            $(document).on('click', '.ver-direccion', function() {
+                const direccion = $(this).data('direccion');
+                Swal.fire({
+                    title: 'Dirección completa',
+                    text: direccion,
+                    icon: 'info'
+                });
+            });
+            
+            $(document).ready(function() {
+            // Inicializar DataTable para visitantes
+            $('#visitantes-table').DataTable({
+                language: {
+                url: '//cdn.datatables.net/plug-ins/1.11.5/i18n/es-ES.json'
+                },
+                pageLength: 10,
+                responsive: true,
+                dom: 'Bfrtip',
+                buttons: [],
+                columnDefs: [
+                { targets: -1, orderable: false } // La última columna (acciones) no es ordenable
+                ]
+            });
+            });
+        
+            // Función para confirmar eliminación de visitante
+            function confirmarEliminarVisitante(visitanteId, nombreVisitante) {
+            // Evitar que el evento se propague
+            event.stopPropagation();
+            
+            Swal.fire({
+                title: '¿Está seguro?',
+                html: `¿Realmente desea eliminar al visitante <strong>${nombreVisitante}</strong>?<br>Esta acción no se puede deshacer.`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Sí, eliminar',
+                cancelButtonText: 'Cancelar'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                eliminarVisitante(visitanteId);
+                }
+            });
+            }
+            
+            // Función para enviar la solicitud de eliminación de visitante
+            function eliminarVisitante(visitanteId) {
+            fetch(`/administradorhome/eliminarVisitante/${visitanteId}`, {
+                method: 'DELETE',
+                headers: {
+                'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                Swal.fire({
+                    title: '¡Eliminado!',
+                    text: data.message,
+                    icon: 'success',
+                    confirmButtonColor: '#0d6efd'
+                }).then(() => {
+                    // Recargar la página para reflejar los cambios
+                    window.location.reload();
+                });
+                } else {
+                Swal.fire({
+                    title: 'Error',
+                    text: data.message || 'No se pudo eliminar al visitante',
+                    icon: 'error',
+                    confirmButtonColor: '#0d6efd'
+                });
+                }
+            })
+            .catch(error => {
+                console.error('Error al eliminar visitante:', error);
+                Swal.fire({
+                title: 'Error',
+                text: 'Ocurrió un error al procesar la solicitud',
+                icon: 'error',
+                confirmButtonColor: '#0d6efd'
+                });
+            });
+            }
+        </script>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const btnEliminarTodos = document.getElementById('eliminarTodosProfesoresBtn');
+                
+                if (btnEliminarTodos) {
+                    btnEliminarTodos.addEventListener('click', function() {
+                        Swal.fire({
+                            title: '¡Atención!',
+                            html: `
+                                <p class="text-danger fw-bold">Está a punto de eliminar TODOS los registros de profesores y sus categorías asociadas.</p>
+                                <p>Esta acción no se puede deshacer. Se recomienda hacer una copia de seguridad antes de continuar.</p>
+                                <p>¿Desea descargar una copia de los datos antes de eliminarlos?</p>
+                            `,
+                            icon: 'warning',
+                            showCancelButton: true,
+                            showDenyButton: true,
+                            confirmButtonColor: '#198754',
+                            denyButtonColor: '#dc3545',
+                            cancelButtonColor: '#6c757d',
+                            confirmButtonText: 'Sí, descargar y continuar',
+                            denyButtonText: 'No, eliminar directamente',
+                            cancelButtonText: 'Cancelar'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                // Descargar copia de seguridad primero
+                                window.location.href = '/administradorhome/descargar-excel';
+                                
+                                // Después mostrar un segundo diálogo para confirmar eliminación
+                                setTimeout(() => {
+                                    confirmarEliminacionMasiva();
+                                }, 1000);
+                            } else if (result.isDenied) {
+                                // Eliminar directamente sin descargar
+                                confirmarEliminacionMasiva();
+                            }
+                        });
+                    });
+                }
+                
+                function confirmarEliminacionMasiva() {
+                    Swal.fire({
+                        title: 'Confirmación Final',
+                        html: `
+                            <p class="text-danger fw-bold">¿Está absolutamente seguro?</p>
+                            <p>Se eliminarán TODOS los profesores y sus categorías asociadas.</p>
+                            <p>Escriba "ELIMINAR" para confirmar:</p>
+                        `,
+                        input: 'text',
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#dc3545',
+                        cancelButtonColor: '#6c757d',
+                        confirmButtonText: 'Sí, eliminar todos',
+                        cancelButtonText: 'Cancelar',
+                        inputValidator: (value) => {
+                            if (value !== 'ELIMINAR') {
+                                return 'Debe escribir "ELIMINAR" para confirmar';
+                            }
+                        }
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            // Enviar solicitud para eliminar todos los profesores
+                            fetch('/administradorhome/eliminarTodosProfesores', {
+                                method: 'DELETE',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                }
+                            })
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.success) {
+                                    Swal.fire({
+                                        title: '¡Eliminados!',
+                                        text: data.message,
+                                        icon: 'success',
+                                        confirmButtonColor: '#0d6efd'
+                                    }).then(() => {
+                                        // Recargar la página para reflejar los cambios
+                                        window.location.reload();
+                                    });
+                                } else {
+                                    Swal.fire({
+                                        title: 'Error',
+                                        text: data.message || 'No se pudieron eliminar los profesores',
+                                        icon: 'error',
+                                        confirmButtonColor: '#0d6efd'
+                                    });
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Error al eliminar profesores:', error);
+                                Swal.fire({
+                                    title: 'Error',
+                                    text: 'Ocurrió un error al procesar la solicitud',
+                                    icon: 'error',
+                                    confirmButtonColor: '#0d6efd'
+                                });
+                            });
+                        }
+                    });
+                }
+            });
+        </script>
+    </body>
+</html>
